@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keor News</title>
+    <body>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        #add-news {
+            margin: 20px 0;
+        }
+
+        form input, form textarea {
+            width: 93%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        form button {
+            padding: 10px 15px;
+            background-color: #173459;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        form button:hover {
+            background-color: #173459;
+        }
+
+        #news-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #news-list li {
+            background-color: white;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #news-list img, #news-list video {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Keor News</h1>
+        </header>
+
+        <section id="add-news">
+            <h2>Add News</h2>
+            <form id="news-form">
+                <input type="text" id="news-title" placeholder="Title of the news" required>
+                <textarea id="news-content" placeholder="Content of the news" required></textarea>
+                <input type="file" id="news-file" accept="image/*,video/*">
+                <button type="submit">Add News</button>
+                <button type="button" id="reset-button">Reset News</button>
+            </form>
+        </section>
+
+        <section id="news-list">
+            <h2>Latest News</h2>
+            <ul id="news-items">
+                <!-- News items will be dynamically added here -->
+            </ul>
+        </section>
+    </div>
+
+    <script>
+        const resetPassword = "keshavkeor";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadNews();
+        });
+
+        const newsForm = document.getElementById('news-form');
+        newsForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const title = document.getElementById('news-title').value;
+            const content = document.getElementById('news-content').value;
+            const fileInput = document.getElementById('news-file');
+            const file = fileInput.files[0];
+
+            if (title && content) {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    const newsItem = {
+                        title: title,
+                        content: content,
+                        mediaUrl: e.target.result,
+                        mediaType: file ? file.type : null,
+                        date: new Date().toLocaleString()
+                    };
+
+                    saveNews(newsItem);
+                    newsForm.reset();
+                };
+
+                if (file) {
+                    reader.readAsDataURL(file);
+                } else {
+                    const newsItem = {
+                        title: title,
+                        content: content,
+                        mediaUrl: null,
+                        mediaType: null,
+                        date: new Date().toLocaleString()
+                    };
+                    saveNews(newsItem);
+                    newsForm.reset();
+                }
+            }
+        });
+
+        function saveNews(newsItem) {
+            let newsList = JSON.parse(localStorage.getItem('news')) || [];
+            newsList.push(newsItem);
+            localStorage.setItem('news', JSON.stringify(newsList));
+            loadNews();
+        }
+
+        function loadNews() {
+            const newsList = JSON.parse(localStorage.getItem('news')) || [];
+            const newsItemsContainer = document.getElementById('news-items');
+            newsItemsContainer.innerHTML = '';
+
+            newsList.reverse().forEach(news => {
+                const newsElement = document.createElement('li');
+                newsElement.innerHTML = `
+                    <h3>${news.title}</h3>
+                    <p>${news.content}</p>
+                    ${
+                        news.mediaUrl
+                            ? news.mediaType && news.mediaType.startsWith('image')
+                                ? `<img src="${news.mediaUrl}" alt="News Media">`
+                                : `<video controls src="${news.mediaUrl}"></video>`
+                            : ''
+                    }
+                    <small><i>Posted on ${news.date}</i></small>
+                `;
+                newsItemsContainer.appendChild(newsElement);
+            });
+        }
+
+        document.getElementById('reset-button').addEventListener('click', () => {
+            const userPassword = prompt("Enter the password to reset all news:");
+            if (userPassword === resetPassword) {
+                localStorage.removeItem('news');
+                loadNews();
+                alert("Reset Successful");
+            } else {
+                alert("Incorrect password. Reset aborted.");
+            }
+        });
+    </script>
+</body>
+</html>
